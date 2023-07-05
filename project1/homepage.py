@@ -1,31 +1,41 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QMessageBox, QLineEdit, QProgressBar, QHBoxLayout, QWidget, QFileDialog, QMenuBar, QStatusBar,QDialog
-from PySide6.QtCore import Qt, QFile, QCoreApplication, Slot, QSize,QFileInfo
+import os
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QMessageBox, QLineEdit, QProgressBar, QHBoxLayout, QWidget, QFileDialog, QMenuBar, QStatusBar, QDialog, QListWidget, QListWidgetItem
+from PySide6.QtCore import Qt, QFile, QCoreApplication, Slot, QSize, QFileInfo
 from PySide6.QtGui import QPalette, QLinearGradient, QColor, QPixmap
 from PySide6.QtUiTools import QUiLoader
+
 
 class VerificationCodeWindow(QMainWindow):
     def __init__(self, homepage):
         super().__init__()
         self.homepage = homepage  # 保存 Homepage 的引用
         self.setWindowTitle("VerificationCode")
-        self.setGeometry(300, 310, 517, 509)
+        self.setGeometry(300, 310, 1200, 1000)
         
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
 
         self.pushButton = QPushButton("开始识别", self.central_widget)
-        self.pushButton.setGeometry(140, 350, 81, 40)
+        self.pushButton.setGeometry(720, 540, 81, 40)
         
         self.label = QLabel("请上传图片", self.central_widget)
-        self.label.setGeometry(20, 70, 361, 211)
+        self.label.setGeometry(420, 70, 700, 450)
         self.label.setAlignment(Qt.AlignCenter)  # 设置文本居中显示
         self.label.setStyleSheet("border: 1px solid black;")
+
+        
+        
+        self.list_widget = QListWidget(self.central_widget)
+        self.list_widget.setGeometry(80, 100, 250, 600)
+        self.list_widget.itemClicked.connect(self.onListItemClicked)  # 连接列表项的点击事件到槽函数
+        
+  
 
 
         
         self.progress_layout = QHBoxLayout()
         self.progress_widget = QWidget(self.central_widget)
-        self.progress_widget.setGeometry(20, 310, 341, 40)
+        self.progress_widget.setGeometry(580, 580, 341, 40)
         self.progress_widget.setLayout(self.progress_layout)
         
         self.label_3 = QLabel("识别进度", self.progress_widget)
@@ -36,7 +46,7 @@ class VerificationCodeWindow(QMainWindow):
         
         self.path_layout = QHBoxLayout()
         self.path_widget = QWidget(self.central_widget)
-        self.path_widget.setGeometry(20, 10, 421, 40)
+        self.path_widget.setGeometry(520, 10, 421, 40)
         self.path_widget.setLayout(self.path_layout)
         
         self.label_2 = QLabel("图片路径", self.path_widget)
@@ -49,7 +59,7 @@ class VerificationCodeWindow(QMainWindow):
         
         self.result_layout = QHBoxLayout()
         self.result_widget = QWidget(self.central_widget)
-        self.result_widget.setGeometry(20, 390, 291, 40)
+        self.result_widget.setGeometry(580, 630, 291, 80)
         self.result_widget.setLayout(self.result_layout)
         
         self.label_4 = QLabel("识别结果：", self.result_widget)
@@ -58,10 +68,10 @@ class VerificationCodeWindow(QMainWindow):
         self.result_layout.addWidget(self.lineEdit_2)
         
         self.return_button = QPushButton("返回", self.central_widget)
-        self.return_button.setGeometry(20, 450, 81, 40)
+        self.return_button.setGeometry(730, 700, 81, 40)
         self.return_button.clicked.connect(self.returnToHomepage)  # 连接返回按钮的点击事件
-
-        self.resizeEvent(None)  # 初始化组件的大小和位置
+    '''
+    self.resizeEvent(None)  # 初始化组件的大小和位置
 
     def resizeEvent(self, event):
         self.adjustComponents()
@@ -74,49 +84,64 @@ class VerificationCodeWindow(QMainWindow):
         # 调整按钮的位置
         button_width = 81
         button_height = 40
-        button_x = int((window_width - button_width) / 2)
+        button_x = int((window_width - button_width) / 1.5)
         button_y = int(window_height * 0.7)
         self.pushButton.setGeometry(button_x, button_y, button_width, button_height)
 
         # 调整 Label 的位置
         label_width = 361
         label_height = 211
-        label_x = int((window_width - label_width) / 2)
+        label_x = int((window_width - label_width) / 1.5)
         label_y = int(window_height * 0.15)
         self.label.setGeometry(label_x, label_y, label_width, label_height)
 
         # 调整进度条和路径输入框的位置
         progress_width = 341
         progress_height = 40
-        progress_x = int((window_width - progress_width) / 2)
+        progress_x = int((window_width - progress_width) / 1.5)
         progress_y = int(window_height * 0.6)
         self.progress_widget.setGeometry(progress_x, progress_y, progress_width, progress_height)
 
         path_width = 421
         path_height = 40
-        path_x = int((window_width - path_width) / 2)
+        path_x = int((window_width - path_width) / 1.5)
         path_y = int(window_height * 0.05)
         self.path_widget.setGeometry(path_x, path_y, path_width, path_height)
 
         # 调整结果和返回按钮的位置
         result_width = 291
         result_height = 40
-        result_x = int((window_width - result_width) / 2)
+        result_x = int((window_width - result_width) / 1.5)
         result_y = int(window_height * 0.75)
         self.result_widget.setGeometry(result_x, result_y, result_width, result_height)
 
         return_width = 81
         return_height = 40
-        return_x = int((window_width - return_width) / 2)
+        return_x = int((window_width - return_width) / 1.5)
         return_y = int(window_height * 0.85)
         self.return_button.setGeometry(return_x, return_y, return_width, return_height)
-
+    '''
+        
     @Slot()
     def returnToHomepage(self):
         self.close()  # 关闭当前窗口
         self.homepage.show()  # 显示 Homepage 窗口
 
     
+    @Slot(QListWidgetItem)
+    def onListItemClicked(self, item):
+        file_path = item.data(Qt.UserRole)  # 获取保存在 item 的 UserRole 中的文件路径
+        if file_path:
+            self.lineEdit.setText(f"选择的图片路径：{file_path}")  # 在第一个 QLineEdit 中显示选择的图片路径
+
+            # 加载图片并显示在 Label 组件中
+            pixmap = QPixmap(file_path)
+            scaled_pixmap = pixmap.scaled(QSize(650, 400), Qt.KeepAspectRatio)  # 调整图片尺寸
+            self.label.setPixmap(scaled_pixmap)
+
+            # 保存图片路径
+            self.selected_image_path = file_path
+
     @Slot()
     def selectImage(self):
         file_dialog = QFileDialog()
@@ -132,22 +157,41 @@ class VerificationCodeWindow(QMainWindow):
                     if file_info.suffix().lower() in ["png", "xpm", "jpg", "jpeg"]:
                         self.lineEdit.setText(file_path)  # 将图片路径显示在文本框中
 
-                        # 加载图片并显示在 Label2 组件中
+                        # 加载图片并显示在 Label 组件中
                         pixmap = QPixmap(file_path)
                         scaled_pixmap = pixmap.scaled(QSize(221, 221), Qt.KeepAspectRatio)  # 调整图片尺寸
                         self.label.setPixmap(scaled_pixmap)
 
-                        # 保存图片对象
-                        self.image_object = pixmap.toImage()
+                        # 保存图片路径
+                        self.selected_image_path = file_path
 
                         # 清空之前选择的文件夹路径
                         self.selected_directory = None
 
                         self.lineEdit.setText(f"选择的图片路径：{file_path}")  # 在第一个 QLineEdit 中显示选择的图片路径
                 elif file_info.isDir():  # 判断是否为文件夹
+
                     self.selected_directory = file_path
 
                     self.lineEdit.setText(f"选择的文件夹路径：{file_path}")  # 在第一个 QLineEdit 中显示选择的文件夹路径
+
+                    # 清空 QListWidget 中的项
+                    self.list_widget.clear()
+
+                    # 加载文件夹中的图片文件并添加到 QListWidget 中
+                    image_files = self.getImageFilesFromDirectory(file_path)
+                    for image_file in image_files:
+                        item = QListWidgetItem(os.path.basename(image_file))
+                        item.setData(Qt.UserRole, image_file)  # 保存文件路径到 item 的 UserRole 中
+                        self.list_widget.addItem(item)
+
+    def getImageFilesFromDirectory(self, directory):
+        image_files = []
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                if file.lower().endswith(('.png', '.xpm', '.jpg', '.jpeg')):
+                    image_files.append(os.path.join(root, file))
+        return image_files
 
 
 
@@ -156,47 +200,58 @@ class ContainerInspectionWindow(QMainWindow):
         super().__init__()
         self.homepage = homepage  # 保存 Homepage 的引用
         self.setWindowTitle("ContainerInspection")
-        self.setGeometry(300, 310, 517, 509)
+        self.setGeometry(300, 310, 1200, 1000)
         self.centralwidget = QWidget(self)
 
+        self.centralwidget = QWidget(self)
+        self.setCentralWidget(self.centralwidget)  # 设置 central widget
+
+
+
+        self.list_widget = QListWidget(self.centralwidget)
+        self.list_widget.setGeometry(80, 100, 250, 600)
+        self.list_widget.itemClicked.connect(self.onListItemClicked)  # 连接列表项的点击事件到槽函数
+
+        
+
         self.label = QLabel("图片路径", self.centralwidget)
-        self.label.setGeometry(20, 10, 54, 40)
+        self.label.setGeometry(400, 30, 54, 40)
 
         self.lineEdit = QLineEdit(self.centralwidget)
-        self.lineEdit.setGeometry(80, 20, 311, 20)
+        self.lineEdit.setGeometry(460, 40, 411, 20)
 
         self.pushButton = QPushButton("选择图片", self.centralwidget)
-        self.pushButton.setGeometry(400, 10, 81, 40)
+        self.pushButton.setGeometry(880, 30, 81, 40)
         self.pushButton.clicked.connect(self.selectImage)  # 连接选择图片按钮的点击事件
 
 
         self.label_2 = QLabel("请上传您的图片", self.centralwidget)
-        self.label_2.setGeometry(40, 50, 221, 221)
+        self.label_2.setGeometry(350, 70, 350, 300)
         self.label_2.setStyleSheet("border: 1px solid black;")
 
-        self.label_3 = QLabel("箱号区域图片", self.centralwidget)
-        self.label_3.setGeometry(310, 160, 171, 61)
+        self.label_3 = QLabel("箱号标记图片", self.centralwidget)
+        self.label_3.setGeometry(730, 70, 350, 300)
         self.label_3.setStyleSheet("border: 1px solid black;")
 
         self.pushButton_2 = QPushButton("开始识别", self.centralwidget)
-        self.pushButton_2.setGeometry(80, 300, 91, 40)
+        self.pushButton_2.setGeometry(670, 440, 100, 40)
 
         self.progressBar = QProgressBar(self.centralwidget)
-        self.progressBar.setGeometry(70, 360, 211, 40)
+        self.progressBar.setGeometry(470, 500, 611, 40)
         self.progressBar.setValue(0)
 
         self.label_4 = QLabel("识别结果", self.centralwidget)
-        self.label_4.setGeometry(290, 290, 51, 40)
+        self.label_4.setGeometry(600, 590, 51, 40)
 
         self.lineEdit_2 = QLineEdit(self.centralwidget)
-        self.lineEdit_2.setGeometry(350, 290, 131, 40)
+        self.lineEdit_2.setGeometry(680, 590, 180, 40)
 
         self.pushButton_3 = QPushButton("返回", self.centralwidget)
-        self.pushButton_3.setGeometry(20, 410, 75, 40)
+        self.pushButton_3.setGeometry(670, 710, 100, 40)
         self.pushButton_3.clicked.connect(self.returnToHomepage)  # 连接返回按钮的点击事件
 
         self.label_5 = QLabel("识别进度", self.centralwidget)
-        self.label_5.setGeometry(10, 360, 54, 40)
+        self.label_5.setGeometry(400, 500, 54, 40)
 
         self.setCentralWidget(self.centralwidget)
 
@@ -208,27 +263,21 @@ class ContainerInspectionWindow(QMainWindow):
         self.setStatusBar(self.statusbar)
         
         self.original_size = self.size()  # 记录原始窗口大小
+    
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.scaleComponents()
+    @Slot(QListWidgetItem)
+    def onListItemClicked(self, item):
+        file_path = item.data(Qt.UserRole)  # 获取保存在 item 的 UserRole 中的文件路径
+        if file_path:
+            self.lineEdit.setText(f"选择的图片路径：{file_path}")  # 在第一个 QLineEdit 中显示选择的图片路径
 
-    def scaleComponents(self):
-        current_size = self.size()
-        width_ratio = current_size.width() / self.original_size.width()
-        height_ratio = current_size.height() / self.original_size.height()
+            # 加载图片并显示在 Label 组件中
+            pixmap = QPixmap(file_path)
+            scaled_pixmap = pixmap.scaled(QSize(330, 280), Qt.KeepAspectRatio)  # 调整图片尺寸
+            self.label_2.setPixmap(scaled_pixmap)
 
-        self.lineEdit.setGeometry(80 * width_ratio, 20 * height_ratio, 311 * width_ratio, 20 * height_ratio)
-        self.pushButton.setGeometry(400 * width_ratio, 10 * height_ratio, 81 * width_ratio, 40 * height_ratio)
-        self.label_2.setGeometry(40 * width_ratio, 50 * height_ratio, 221 * width_ratio, 221 * height_ratio)
-        self.label_3.setGeometry(310 * width_ratio, 160 * height_ratio, 171 * width_ratio, 61 * height_ratio)
-        self.pushButton_2.setGeometry(80 * width_ratio, 300 * height_ratio, 91 * width_ratio, 40 * height_ratio)
-        self.progressBar.setGeometry(70 * width_ratio, 360 * height_ratio, 211 * width_ratio, 40 * height_ratio)
-        self.label_4.setGeometry(290 * width_ratio, 290 * height_ratio, 51 * width_ratio, 40 * height_ratio)
-        self.lineEdit_2.setGeometry(350 * width_ratio, 290 * height_ratio, 131 * width_ratio, 40 * height_ratio)
-        self.pushButton_3.setGeometry(20 * width_ratio, 410 * height_ratio, 75 * width_ratio, 40 * height_ratio)
-        self.label_5.setGeometry(10 * width_ratio, 360 * height_ratio, 54 * width_ratio, 40 * height_ratio)
-
+            # 保存图片路径
+            self.selected_image_path = file_path
     
 
 
@@ -247,24 +296,42 @@ class ContainerInspectionWindow(QMainWindow):
                     if file_info.suffix().lower() in ["png", "xpm", "jpg", "jpeg"]:
                         self.lineEdit.setText(file_path)  # 将图片路径显示在文本框中
 
-                        # 加载图片并显示在 Label2 组件中
+                        # 加载图片并显示在 Label 组件中
                         pixmap = QPixmap(file_path)
-                        scaled_pixmap = pixmap.scaled(QSize(221, 221), Qt.KeepAspectRatio)  # 调整图片尺寸
+                        scaled_pixmap = pixmap.scaled(QSize(330,280), Qt.KeepAspectRatio)  # 调整图片尺寸
                         self.label_2.setPixmap(scaled_pixmap)
 
-                        # 保存图片对象
-                        self.image_object = pixmap.toImage()
+                        # 保存图片路径
+                        self.selected_image_path = file_path
 
                         # 清空之前选择的文件夹路径
                         self.selected_directory = None
 
                         self.lineEdit.setText(f"选择的图片路径：{file_path}")  # 在第一个 QLineEdit 中显示选择的图片路径
                 elif file_info.isDir():  # 判断是否为文件夹
+
                     self.selected_directory = file_path
 
                     self.lineEdit.setText(f"选择的文件夹路径：{file_path}")  # 在第一个 QLineEdit 中显示选择的文件夹路径
 
-                    
+                    # 清空 QListWidget 中的项
+                    self.list_widget.clear()
+
+                    # 加载文件夹中的图片文件并添加到 QListWidget 中
+                    image_files = self.getImageFilesFromDirectory(file_path)
+                    for image_file in image_files:
+                        item = QListWidgetItem(os.path.basename(image_file))
+                        item.setData(Qt.UserRole, image_file)  # 保存文件路径到 item 的 UserRole 中
+                        self.list_widget.addItem(item)
+
+    def getImageFilesFromDirectory(self, directory):
+        image_files = []
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                if file.lower().endswith(('.png', '.xpm', '.jpg', '.jpeg')):
+                    image_files.append(os.path.join(root, file))
+        return image_files
+
 
 
     @Slot()
