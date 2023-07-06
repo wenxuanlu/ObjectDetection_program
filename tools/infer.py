@@ -44,8 +44,8 @@ def get_args_parser(add_help=True):
 
 
 @torch.no_grad()
-def run(weights=osp.join(ROOT, 'yolov6s.pt'),
-        source=osp.join(ROOT, 'data/images'),
+def run(weights,
+        source,
         webcam=False,
         webcam_addr=0,
         yaml=None,
@@ -57,7 +57,7 @@ def run(weights=osp.join(ROOT, 'yolov6s.pt'),
         save_txt=False,
         not_save_img=False,
         save_dir=None,
-        view_img=True,
+        view_img=False,
         classes=None,
         agnostic_nms=False,
         project=osp.join(ROOT, 'runs/inference'),
@@ -116,11 +116,19 @@ def run(weights=osp.join(ROOT, 'yolov6s.pt'),
     img_path_gen = osp.join(ROOT, 'runs/inference/exp', img_gen)
 
     #判断txt文件是否存在
-    if not os.path.exists(img_path_gen) or not os.path.exists(txt_path_gen):
+    if not os.path.exists(img_path_gen) and not os.path.exists(txt_path_gen):
         inferer.infer(conf_thres, iou_thres, classes, agnostic_nms, max_det, save_dir, save_txt, not not_save_img, hide_labels, hide_conf, view_img)
         LOGGER.info(f"Results saved to {save_dir}")
 
-    convert_xiangzi(txt_path_gen)    
+    judge = yaml.split('/')[-1].split('.')[0]
+    if judge == 'dataset':
+        ans = convert_yanzhengma(txt_path_gen)
+    elif judge == 'xiangzi_data':
+        ans = convert_xiangzi(txt_path_gen)
+    else:
+        print('yaml文件名不对')
+     
+    return ans
 
 def convert_yanzhengma(txt_path_gen):
     # 定义数字到字符的映射关系
@@ -149,8 +157,8 @@ def convert_yanzhengma(txt_path_gen):
             center_y = float(label_[2])
             width = float(label_[3])
             height = float(label_[4])
-            zhixindu = float(label_[5])
-            label_data.append((class_id, center_x, center_y, width, height, zhixindu))
+            confidence = float(label_[5])
+            label_data.append((class_id, center_x, center_y, width, height, confidence))
 
     # 按照 center_x 从小到大排序
     label_data.sort(key=lambda x: x[1])
@@ -163,6 +171,9 @@ def convert_yanzhengma(txt_path_gen):
 
     # 输出结果
     print(output_txt)
+    return output_txt
+
+
 
 def convert_xiangzi(txt_path_gen):
     #凡是type_开头的标签和被框在里边的标签都忽略掉
@@ -187,16 +198,13 @@ def convert_xiangzi(txt_path_gen):
     label_data_2 = []
     label_data_3 = []
     type_id = 0
+
     X_limit_min = 0
     X_limit_max = 0
     Y_limit_min = 0
     Y_limit_max = 0
 
     limit_id = 0
-    X_legal_min = 0
-    X_legal_max = 0
-    Y_legal_min = 0
-    Y_legal_max = 0
 
     #找序号为8和9的框，确定边界,为了丢弃
     for label in labels:
@@ -208,14 +216,15 @@ def convert_xiangzi(txt_path_gen):
             center_y = float(label_tmp[2])
             width = float(label_tmp[3])
             height = float(label_tmp[4])
-            zhixindu = float(label_tmp[5])
-        if class_id == 8 or class_id == 9:
-            X_limit_max = max(X_limit_max, center_x + width / 2)
-            X_limit_min = min(X_limit_min, center_x - width / 2)
-            Y_limit_max = max(Y_limit_max, center_y + height / 2)
-            Y_limit_min = min(Y_limit_min, center_y - height / 2)
-            type_id = class_id  
-            break
+            if class_id == 8 or class_id == 9:
+                X_limit_max = center_x + width / 2
+                X_limit_min = center_x - width / 2
+                Y_limit_max = center_y + height / 2
+                Y_limit_min = center_y - height / 2
+                type_id = class_id  
+                break
+            else:
+                continue
     
     #找heng和shu的框，确定边界，确定输出格式
     for label in labels:
@@ -227,21 +236,16 @@ def convert_xiangzi(txt_path_gen):
         center_y = float(label_tmp[2])
         width = float(label_tmp[3])
         height = float(label_tmp[4])
-        zhixindu = float(label_tmp[5])
+        confidence = float(label_tmp[5])
         if class_id == 4 or class_id == 5 or class_id == 6:
             limit_id = class_id
-            X_legal_max = max(X_legal_max, center_x + width / 2)
-            X_legal_min = min(X_legal_min, center_x - width / 2)
-            Y_legal_max = max(Y_legal_max, center_y + height / 2)
-            Y_legal_min = min(Y_legal_min, center_y - height / 2)
             break
-        if class_id == 7:
+        elif class_id == 7:
             limit_id = class_id
-            X_legal_max = max(X_legal_max, center_x + width / 2)
-            X_legal_min = min(X_legal_min, center_x - width / 2)
-            Y_legal_max = max(Y_legal_max, center_y + height / 2)
-            Y_legal_min = min(Y_legal_min, center_y - height / 2)
             break
+        else:
+            continue
+
 
     #遍历，选出序号
     for label in labels:
@@ -253,20 +257,26 @@ def convert_xiangzi(txt_path_gen):
             center_y = float(label_[2])
             width = float(label_[3])
             height = float(label_[4])
-            zhixindu = float(label_[5])
+            confidence = float(label_[5])
             if not class_id == 8 and not class_id == 9 and not class_id == 4 and not class_id == 5 and not class_id == 6 and not class_id == 7:
-                if not (center_x > X_limit_min and center_x < X_limit_max and center_y > Y_limit_min and center_y < Y_limit_max):
-                    label_data.append((class_id, center_x, center_y, width, height, zhixindu))
+                if type_id != 0:
+                    if not (center_x > X_limit_min and center_x < X_limit_max and center_y > Y_limit_min and center_y < Y_limit_max):
+                        label_data.append((class_id, center_x, center_y, width, height, confidence))
+                else:
+                    label_data.append((class_id, center_x, center_y, width, height, confidence))
+            else:
+                continue
+
     #先看type_id，再看limit_id，再看坐标，type_id和limit_id一致
     if type_id == 8:
         if limit_id == 4:#heng_1
             label_data.sort(key=lambda x: x[1])
         elif limit_id == 5:#heng_2
             label_data.sort(key=lambda x: x[2])
-            threshold = (label_data[0][1] + label_data[-1][1]) / 2
+            threshold = (label_data[0][2] + label_data[-1][2]) / 2
             # 将框分配到对应的簇
             for box in label_data:
-                if box[1] < threshold:
+                if box[2] < threshold:
                     label_data_1.append(box)
                 else:
                     label_data_2.append(box)
@@ -274,13 +284,13 @@ def convert_xiangzi(txt_path_gen):
             label_data_2.sort(key=lambda x: x[1])
         elif limit_id == 6:#heng_3
             label_data.sort(key=lambda x: x[2])
-            threshold1 = label_data[0][1] + (label_data[-1][1] - label_data[0][1]) / 3
-            threshold2 = label_data[0][1] + 2 * (label_data[-1][1] - label_data[0][1]) / 3
+            threshold1 = label_data[0][2] + (label_data[-1][2] - label_data[0][2]) / 3
+            threshold2 = label_data[0][2] + 2 * (label_data[-1][2] - label_data[0][2]) / 3
             # 将框分配到对应的簇
             for box in label_data:
-                if box[1] < threshold1:
+                if box[2] < threshold1:
                     label_data_1.append(box)
-                elif box[1] < threshold2:
+                elif box[2] < threshold2:
                     label_data_2.append(box)
                 else:
                     label_data_3.append(box)
@@ -294,6 +304,7 @@ def convert_xiangzi(txt_path_gen):
         label_data.sort(key=lambda x: x[2]) 
     else:
         print("error")
+
     #输出
     output_txt = ""
     if limit_id == 7:
@@ -312,11 +323,11 @@ def convert_xiangzi(txt_path_gen):
             output_txt += class_id
             output_txt += " "
         output_txt += "\n"
-        # for item in label_data_2:
-        #     class_id = char_mapping[item[0]]
-        #     output_txt += class_id
-        #     output_txt += " "
-        # output_txt += "\n"
+        for item in label_data_2:
+            class_id = char_mapping[item[0]]
+            output_txt += class_id
+            output_txt += " "
+        output_txt += "\n"
     elif limit_id == 6:
         for item in label_data_1:
             class_id = char_mapping[item[0]]
@@ -338,11 +349,13 @@ def convert_xiangzi(txt_path_gen):
 
     # 输出结果
     print(output_txt)
+    return output_txt
+# def main(args):
+#     run(args) #vars() 函数返回对象object的属性和属性值的字典对象。#**kwargs表示将字典扩展为关键字参数,相当于run(weights=osp.join(ROOT, 'yolov6s.pt'),source=osp.join(ROOT, 'data/images'),webcam=False,webcam_addr=0,yaml=None,img_size=640,conf_thres=0.7,iou_thres=0.45,max_det=1000,device='',save_txt=False,not_save_img=False,save_dir=None,view_img=True,classes=None,agnostic_nms=False,project=osp.join(ROOT, 'runs/inference'),name='exp',hide_labels=True,hide_conf=True,half=False, )
 
-def main(args):
-    run(**vars(args)) #vars() 函数返回对象object的属性和属性值的字典对象。#**kwargs表示将字典扩展为关键字参数,相当于run(weights=osp.join(ROOT, 'yolov6s.pt'),source=osp.join(ROOT, 'data/images'),webcam=False,webcam_addr=0,yaml=None,img_size=640,conf_thres=0.7,iou_thres=0.45,max_det=1000,device='',save_txt=False,not_save_img=False,save_dir=None,view_img=True,classes=None,agnostic_nms=False,project=osp.join(ROOT, 'runs/inference'),name='exp',hide_labels=True,hide_conf=True,half=False, )
 
-
-if __name__ == "__main__":
-    args = get_args_parser()
-    main(args)
+# if __name__ == "__main__":
+#     args = get_args_parser()
+#     print(type(vars(args)))
+#     print(vars(args))
+#     main(args)
