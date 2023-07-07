@@ -1,9 +1,12 @@
 import os
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QMessageBox, QLineEdit, QProgressBar, QHBoxLayout, QWidget, QFileDialog, QMenuBar, QStatusBar, QDialog, QListWidget, QListWidgetItem
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QMessageBox, QLineEdit, QProgressBar, QHBoxLayout, QWidget, QFileDialog, QMenuBar, QStatusBar, QDialog, QListWidget, QListWidgetItem,QPlainTextEdit
 from PySide6.QtCore import Qt, QFile, QCoreApplication, Slot, QSize, QFileInfo
 from PySide6.QtGui import QPalette, QLinearGradient, QColor, QPixmap
 from PySide6.QtUiTools import QUiLoader
 from tools import infer
+
+ROOT = os.getcwd()
+print(ROOT)
 
 class VerificationCodeWindow(QMainWindow):
     def __init__(self, homepage):
@@ -171,7 +174,7 @@ class ContainerInspectionWindow(QMainWindow):
         super().__init__()
         self.homepage = homepage  # 保存 Homepage 的引用
         self.setWindowTitle("ContainerInspection")
-        self.setGeometry(300, 310, 1200, 1000)
+        self.setGeometry(300, 310, 1200, 800)
         self.centralwidget = QWidget(self)
 
         self.centralwidget = QWidget(self)
@@ -180,7 +183,7 @@ class ContainerInspectionWindow(QMainWindow):
 
 
         self.list_widget = QListWidget(self.centralwidget)
-        self.list_widget.setGeometry(80, 100, 250, 600)
+        self.list_widget.setGeometry(30, 100, 100, 600)
         self.list_widget.itemClicked.connect(self.onListItemClicked)  # 连接列表项的点击事件到槽函数
 
         
@@ -197,33 +200,33 @@ class ContainerInspectionWindow(QMainWindow):
 
 
         self.label_2 = QLabel("请上传您的图片", self.centralwidget)
-        self.label_2.setGeometry(350, 70, 350, 300)
+        self.label_2.setGeometry(160, 70, 500, 400)
         self.label_2.setStyleSheet("border: 1px solid black;")
 
         self.label_3 = QLabel("箱号标记图片", self.centralwidget)
-        self.label_3.setGeometry(730, 70, 350, 300)
+        self.label_3.setGeometry(680, 70, 500, 400)
         self.label_3.setStyleSheet("border: 1px solid black;")
 
         self.pushButton_2 = QPushButton("开始识别", self.centralwidget)
-        self.pushButton_2.setGeometry(670, 440, 100, 40)
+        self.pushButton_2.setGeometry(600, 500, 100, 40)
         self.pushButton_2.clicked.connect(self.startRecognition)  # 连接开始识别按钮的点击事件
 
         self.progressBar = QProgressBar(self.centralwidget)
-        self.progressBar.setGeometry(470, 500, 611, 40)
+        self.progressBar.setGeometry(360, 540, 731, 40)
         self.progressBar.setValue(0)
 
         self.label_4 = QLabel("识别结果", self.centralwidget)
-        self.label_4.setGeometry(600, 590, 51, 40)
+        self.label_4.setGeometry(480, 580, 51, 40)
 
-        self.lineEdit_2 = QLineEdit(self.centralwidget)
-        self.lineEdit_2.setGeometry(680, 590, 180, 40)
+        self.plainlineEdit_2 = QPlainTextEdit(self.centralwidget)
+        self.plainlineEdit_2.setGeometry(560, 580, 180, 60)
 
         self.pushButton_3 = QPushButton("返回", self.centralwidget)
-        self.pushButton_3.setGeometry(670, 710, 100, 40)
+        self.pushButton_3.setGeometry(600, 660, 100, 40)
         self.pushButton_3.clicked.connect(self.returnToHomepage)  # 连接返回按钮的点击事件
 
         self.label_5 = QLabel("识别进度", self.centralwidget)
-        self.label_5.setGeometry(400, 500, 54, 40)
+        self.label_5.setGeometry(280, 540, 54, 40)
 
         self.setCentralWidget(self.centralwidget)
 
@@ -239,22 +242,22 @@ class ContainerInspectionWindow(QMainWindow):
     def startRecognition(self):
         path_str = str(self.lineEdit.text())
         self.progressBar.setValue(20)
-        img_output = '/Users/lwx/ObjectDetection_program/runs/inference/exp/' + path_str.split('/')[-1]
+        img_output = ROOT + '/runs/inference/exp/' + path_str.split('/')[-1]
         if path_str:
             self.progressBar.setValue(40)
-            args_dict = {'weights': '/Users/lwx/exp1/weights/best_ckpt.pt', 'source': path_str, 'yaml': '/Users/lwx/ObjectDetection_program/data/xiangzi_data.yaml', 'img_size': [640, 640], 'conf_thres': 0.75, 'iou_thres': 0.45, 'max_det': 1000, 'device': '0', 'save_txt': True, 'not_save_img': False, 'save_dir': None, 'agnostic_nms': False, 'project': '/Users/lwx/ObjectDetection_program/runs/inference', 'hide_labels': False, 'hide_conf': True}
+            args_dict = {'weights': '/Users/lwx/exp1/weights/best_ckpt.pt', 'source': path_str, 'yaml': '/Users/lwx/ObjectDetection_program/data/xiangzi_data.yaml', 'img_size': [640, 640], 'conf_thres': 0.80, 'iou_thres': 0.45, 'max_det': 1000, 'device': '0', 'save_txt': True, 'not_save_img': False, 'save_dir': None, 'agnostic_nms': False, 'project': '/Users/lwx/ObjectDetection_program/runs/inference', 'hide_labels': False, 'hide_conf': True}
             print(type(args_dict))
             output = infer.run(**args_dict)
             self.progressBar.setValue(80)
-            self.lineEdit_2.setText(output)
+            self.plainlineEdit_2.setPlainText(output)
             #self.label_3.setPixmap(QPixmap(img_output))
             pixmap = QPixmap(img_output)
-            scaled_pixmap = pixmap.scaled(QSize(330,280), Qt.KeepAspectRatio)  # 调整图片尺寸
+            scaled_pixmap = pixmap.scaled(QSize(500,400), Qt.KeepAspectRatio)  # 调整图片尺寸
             self.label_3.setPixmap(scaled_pixmap)
             self.progressBar.setValue(100)
             #python tools/infer.py --weights /Users/lwx/exp/weights/best_ckpt.pt --source data/images/im1.jpg --yaml data/dataset.yaml --save-txt --not-save-img 
         else:
-            self.lineEdit_2.setText("请先选择图片！")
+            self.plainlineEdit_2.setText("请先选择图片！")
 
     @Slot(QListWidgetItem)
     def onListItemClicked(self, item):
@@ -264,7 +267,7 @@ class ContainerInspectionWindow(QMainWindow):
 
             # 加载图片并显示在 Label 组件中
             pixmap = QPixmap(file_path)
-            scaled_pixmap = pixmap.scaled(QSize(330, 280), Qt.KeepAspectRatio)  # 调整图片尺寸
+            scaled_pixmap = pixmap.scaled(QSize(500, 400), Qt.KeepAspectRatio)  # 调整图片尺寸
             self.label_2.setPixmap(scaled_pixmap)
 
             # 保存图片路径
